@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/yale-cpsc-213/hwutils"
+  packages = ["random"]
+  revision = "567f9b0c75e61569866b3f2f5ceb4a66e56de834"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/net"
   packages = [
     "html",
@@ -13,6 +19,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "fff2f8f4ad76f99affe4177ac5360a9ccee72ec30b8b16539b00a29391d53b05"
+  inputs-digest = "f070366e6f440844e9babb0ee44e1c67474165bfcfa0fc410e81c5bab5a25011"
   solver-name = "gps-cdcl"
   solver-version = 1

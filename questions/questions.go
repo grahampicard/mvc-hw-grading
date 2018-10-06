@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
@@ -41,6 +42,8 @@ func TestAll(nickname string, rawURL string, showOutput bool) (int, int, error) 
 		indexIsUp,
 		nicknameIsUp,
 		nicknameMatchesExpected(nickname),
+		isSearchable(true),
+		isSearchable(false),
 	}
 	for _, question := range questions {
 		passed, questionText, err2 := question(parsedURL.Scheme, parsedURL.Host)
@@ -161,6 +164,92 @@ func indexIsUp(scheme string, baseURL string) (bool, string, error) {
 		"Your return a 200 status code at /",
 		http.StatusOK,
 	)
+}
+
+func getPeopleQuery(useWord bool) (string, []string, []string) {
+	people := []string{
+		"Molly Nagler",
+		"Kyle Jensen",
+		"Anjani Jain",
+		"Ted Snyder",
+		"Sharon Oster",
+		"Sherri Scully",
+	}
+	joinedNames := strings.Join(people, " ")
+	var query string
+	s := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+	if useWord {
+		words := strings.Split(joinedNames, " ")
+		choice := s.Intn(len(words))
+		log.Println(choice)
+		query = words[choice]
+		if s.Float64() > 0.5 {
+			query = strings.ToLower(query)
+		} else {
+			query = strings.ToUpper(query)
+		}
+	} else {
+		joinedNamesSpaceless := strings.Replace(joinedNames, " ", "", -1)
+		runes := []rune(joinedNamesSpaceless)
+		choice := s.Intn(len(runes) - 1)
+		log.Println(choice)
+		query = string(runes[choice])
+	}
+	matchingPeople := make([]string, 0)
+	notMatchingPeople := make([]string, 0)
+	for i, person := range people {
+		if strings.Contains(strings.ToLower(person), strings.ToLower(query)) {
+			matchingPeople = append(matchingPeople, people[i])
+		} else {
+			notMatchingPeople = append(notMatchingPeople, people[i])
+		}
+	}
+	return query, matchingPeople, notMatchingPeople
+}
+
+func isSearchable(useWord bool) serverQuestion {
+	var query string
+	var matchingPeople []string
+	var notMatchingPeople []string
+	for len(matchingPeople) == 0 && len(notMatchingPeople) == 0 {
+		query, matchingPeople, notMatchingPeople = getPeopleQuery(useWord)
+	}
+	return func(scheme string, baseURL string) (bool, string, error) {
+		testFunc := func(response *http.Response) (bool, error) {
+			body, err := readResponseBody(response)
+			if err != nil {
+				return false, err
+			}
+			for _, person := range matchingPeople {
+				if strings.Contains(body, person) == false {
+					return false, nil
+				}
+			}
+			for _, person := range notMatchingPeople {
+				if strings.Contains(body, person) == true {
+					return false, nil
+				}
+			}
+			return true, nil
+		}
+		urlValues := url.Values{}
+		urlValues.Set("q", query)
+		msg := fmt.Sprintf(
+			"Searching for %s at /attendees, shows these faculty: %s; and, NOT these %s",
+			query,
+			strings.Join(matchingPeople, ", "),
+			strings.Join(notMatchingPeople, ", "),
+		)
+
+		return getAndCheckFunction(
+			scheme,
+			baseURL,
+			"/attendees",
+			urlValues,
+			msg,
+			testFunc,
+		)
+	}
 }
 
 func nicknameIsUp(scheme string, baseURL string) (bool, string, error) {
