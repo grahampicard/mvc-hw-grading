@@ -168,10 +168,9 @@ func indexIsUp(scheme string, baseURL string) (bool, string, error) {
 
 func getPeopleQuery(useWord bool) (string, []string, []string) {
 	people := []string{
-		"Molly Nagler",
+		"Taly Reich",
 		"Kyle Jensen",
 		"Anjani Jain",
-		"Ted Snyder",
 		"Sharon Oster",
 		"Sherri Scully",
 	}
