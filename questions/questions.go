@@ -171,6 +171,7 @@ func getPeopleQuery(useWord bool) (string, []string, []string) {
 		"Taly Reich",
 		"Kyle Jensen",
 		"Anjani Jain",
+		"Kerwin Charles",
 		"Sharon Oster",
 		"Sherri Scully",
 	}
